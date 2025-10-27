@@ -18,5 +18,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - run: echo "Hello, world!"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install ADF utilities and add script
+        run: |
+          npm init -y
+          npm i -D @microsoft/azure-data-factory-utilities
+          npx json -I -f package.json -e \
+            'this.scripts={...(this.scripts||{}),start:"node node_modules/@microsoft/azure-data-factory-utilities/lib/index"}'
+
+      - name: Build ADF Artifact
+        run: |
+          npm run start export ./platform/adf /subscriptions/8cafe4d5-ec51-40c7-9703-49e869941388/resourceGroups/demo20251004-dev/providers/Microsoft.DataFactory/factories/adf-demo20251004-dev adf-output
+
+      - name: Upload ADF Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: adf-arm-template
+          path: adf-output
